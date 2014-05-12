@@ -6,9 +6,17 @@ local elements = require'elements'
 
 local html = {}
 
+--gsub that doesn't that doesn't allow capture references, like %1
+local function safe_gsub(str, pattern, str_replace)
+	return str:gsub(pattern, str_replace:gsub('%%','%%%%'))
+end
+
 --Note: only valid for html attributes that are quoted with double quotes.
---Single quoted, backtick quoted, or unquoted values will leave XSS holes
-local function html_attr_escape(str)
+--Single quoted, backtick quoted, or unquoted values will leave XSS holes!
+local function html_attr_escape(attr, str)
+	--attributes that need no validation, just escaping
+	--local safe_attrs = {align=true, alink=true, alt=true, bgcolor=true, border=true, cellpadding=true, cellspacing=true, class=true, color=true, cols=true, colspan=true, coords=true, dir=true, face=true, height=true, hspace=true, ismap=true, lang=true, marginheight=true, marginwidth=true, multiple=true, nohref=true, noresize=true, noshade=true, nowrap=true, ref=true, rel=true, rev=true, rows=true, rowspan=true, scrolling=true, shape=true, span=true, summary=true, tabindex=true, title=true, usemap=true, valign=true, value=true, vlink=true, vspace=true, width=true} 
+	--local url_attrs = {href=true, src=true}
 	local replacements = {
 		['<']='&lt;',
 		['>']='&gt;',
@@ -17,6 +25,30 @@ local function html_attr_escape(str)
 	}
 	return str:gsub('[<>"&]',replacements)
 end
+
+--Note: only valid for normal html elements.
+local function html_body_escape(str)
+	local replacements = {
+		['<']='&lt;',
+		['>']='&gt;',
+		['"']='&quot;',
+		['&']='&amp;',
+		["'"]='&#x27;',
+		['\\']='&#x2F;'
+	}
+	return str:gsub('[<>"&\'\\]',replacements)
+end
+
+function url_encode(str)
+  if str then
+    str = string.gsub (str, "\n", "\r\n")
+    str = string.gsub (str, "([^%w %-%_%.%~])",
+        function (c) return string.format ("%%%02X", string.byte(c)) end)
+    str = string.gsub (str, " ", "+")
+  end
+  return str	
+end
+
 
 local HtmlElement do
 	local HtmlElementM = {}
@@ -71,7 +103,7 @@ local HtmlElement do
 		end
 		local attrs = {}
 		for k,v in pairs(self.attrs) do
-			table.insert(attrs, string.format(' %s="%s"', k, html_attr_escape(v)))
+			table.insert(attrs, string.format(' %s="%s"', k, html_attr_escape(k,v)))
 		end
 		local open = ''
 		if not self._noTag then
@@ -104,6 +136,18 @@ setmetatable(html,{
 })
 
 html.group = HtmlElement({'',void=true, noTag=true})
+
+function html.url(str)
+	return function(tab)
+		local query_params = {}
+		for k,v in pairs(tab) do
+			table.insert(query_params, url_encode(k) .. '=' .. url_encode(v))
+			table.insert(query_params, '&')
+		end
+		table.remove(query_params)
+		return safe_gsub(str, '%%q','?' .. table.concat(query_params))
+	end
+end
 
 for i=1,#elements do
 	local element, global = HtmlElement(elements[i])

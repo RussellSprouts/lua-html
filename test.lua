@@ -52,3 +52,5 @@ test('escapes attribute values', '<p class="&amp;"></p>', h.p.class'&')
 test('escapes attribute values', '<p class="&lt;"></p>', h.p.class'<')
 test('escapes attribute values', '<p class="&gt;"></p>', h.p.class'>')
 test('escapes attribute values', '<p class="&quot;"></p>', h.p.class'"')
+
+test('url encoding', 'http://example.com/page?test=%3D',h.url'http://example.com/page%q'{test='='})
