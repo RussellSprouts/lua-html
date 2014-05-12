@@ -4,17 +4,19 @@ local HtmlMeta = {}
 
 local elements = require'elements'
 
+local html = {}
+
 local HtmlElement do
 	local HtmlElementM = {}
 	function HtmlElement(el)
 		local tab = {
-			tag = el.el or el[1],
-			global = el[1],
+			tag = el[1],
 			attrs = {},
 			content = {},
-			void = el[2] == 'void'
+			_void = not not el.void,
+			_noTag = not not el.noTag
 		}
-		return setmetatable(tab, HtmlElementM)
+		return setmetatable(tab, HtmlElementM), el.global or el[1]
 	end
 
 	local function clone(o)
@@ -59,19 +61,29 @@ local HtmlElement do
 		for k,v in pairs(self.attrs) do
 			table.insert(attrs, string.format(" %s=%q", k, v))
 		end
+		local open = ''
+		if not self._noTag then
+			open = string.format('<%s%s>', self.tag, table.concat(attrs))
+		end
 		local close = ''
-		if not self.void then
+		if not self._void then
 			close = string.format("</%s>", self.tag)
 		end
-		return string.format("<%s%s>%s%s", self.tag, table.concat(attrs), table.concat(innerHtml), close)
+		return string.format("%s%s%s", open, table.concat(innerHtml), close)
 	end
 
 	function HtmlElementM:__concat(other)
-		return tostring(self) .. tostring(other)
+		if self._noTag then
+			return self{other}
+		elseif other._noTag then
+			local ret = clone(other)
+			table.insert(ret.content, 1, self)
+			return ret
+		end
+		return html.group{self, other}
 	end
 end
 
-local html = {}
 setmetatable(html,{
 	__call = function(self, f)
 		return f(self)
@@ -79,9 +91,11 @@ setmetatable(html,{
 	__index = _ENV
 })
 
+html.group = HtmlElement({'',void=true, noTag=true})
+
 for i=1,#elements do
-	local element = HtmlElement(elements[i])
-	html[element.global] = element
+	local element, global = HtmlElement(elements[i])
+	html[global] = element
 end
 
 return html

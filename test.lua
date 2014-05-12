@@ -15,13 +15,13 @@ test("Class name",'<a class="c"></a>', h.a.class'c')
 
 test("No mutation on attrs", '<a id="test"></a><a></a>',h(function(_ENV)
 	local custom = a.id'test'
-	return custom..a
+	return custom .. a
 end))
 
 test("No mutation on content", '<a>content1</a><a>content2</a>', h(function(_ENV)
 	local content1 = a'content1'
 	local content2 = a'content2'
-	return content1..content2
+	return content1 .. content2
 end))
 
 test('add content to existing', '<a class="test">c1</a><a class="test">c2</a>', h(function(_ENV)
@@ -41,3 +41,7 @@ end))
 test('content as a table', '<a>abc</a>',h(function(_ENV)
 	return a {'a','b','c'}
 end))
+
+test('multiple concats', '<br><img><area>', h.br .. h.img .. h.area)
+
+test('concat with string', '<p>Hello <strong>there</strong>!</p>', h.p{"Hello " .. h.strong"there" .. "!"})
