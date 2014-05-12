@@ -1,4 +1,6 @@
-# Simple Lua HTML Templates
+# lua-html
+
+Simple templating in Lua 5.2+
 
 This module provides an easy way to write html from Lua code.
 
