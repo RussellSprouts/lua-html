@@ -45,3 +45,10 @@ end))
 test('multiple concats', '<br><img><area>', h.br .. h.img .. h.area)
 
 test('concat with string', '<p>Hello <strong>there</strong>!</p>', h.p{"Hello " .. h.strong"there" .. "!"})
+
+test('multiple calls', '<p>1234567</p>', h.p {1,2,3} {4,5,6} '7')
+
+test('escapes attribute values', '<p class="&amp;"></p>', h.p.class'&')
+test('escapes attribute values', '<p class="&lt;"></p>', h.p.class'<')
+test('escapes attribute values', '<p class="&gt;"></p>', h.p.class'>')
+test('escapes attribute values', '<p class="&quot;"></p>', h.p.class'"')

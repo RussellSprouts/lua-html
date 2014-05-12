@@ -6,6 +6,18 @@ local elements = require'elements'
 
 local html = {}
 
+--Note: only valid for html attributes that are quoted with double quotes.
+--Single quoted, backtick quoted, or unquoted values will leave XSS holes
+local function html_attr_escape(str)
+	local replacements = {
+		['<']='&lt;',
+		['>']='&gt;',
+		['"']='&quot;',
+		['&']='&amp;'
+	}
+	return str:gsub('[<>"&]',replacements)
+end
+
 local HtmlElement do
 	local HtmlElementM = {}
 	function HtmlElement(el)
@@ -59,7 +71,7 @@ local HtmlElement do
 		end
 		local attrs = {}
 		for k,v in pairs(self.attrs) do
-			table.insert(attrs, string.format(" %s=%q", k, v))
+			table.insert(attrs, string.format(' %s="%s"', k, html_attr_escape(v)))
 		end
 		local open = ''
 		if not self._noTag then
