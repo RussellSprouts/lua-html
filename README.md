@@ -52,7 +52,9 @@ p{"Hello "..strong"there".."!"} --> <p>Hello <strong>there</strong>!</p>
 - Indexing an HtmlElement will return a function that accepts a value, and returns a new element with the
   attribute of the index set.
 
-        div.class'hello' --> <div class="hello"></div>
+```lua
+div.class'hello' --> <div class="hello"></div>
+```
 
 - Calling `tostring` on an HtmlElement will return the html as a string
 
